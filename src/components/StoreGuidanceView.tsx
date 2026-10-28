@@ -3,6 +3,8 @@ import { PolicyConfig } from '../types/policy';
 import { getGooglePlayDataSafetyGuidance, getAppleNutritionLabelsGuidance } from '../utils/storeComplianceHelper';
 import { Copy, Check, ShieldAlert, CheckCircle2, AlertCircle, FileCode, ExternalLink } from 'lucide-react';
 
+import { copyToClipboard } from '../utils/clipboard';
+
 interface StoreGuidanceViewProps {
   config: PolicyConfig;
 }
@@ -13,11 +15,13 @@ export const StoreGuidanceView: React.FC<StoreGuidanceViewProps> = ({ config }) 
 
   const [copiedFs, setCopiedFs] = useState(false);
 
-  const copyFsDeclaration = () => {
+  const copyFsDeclaration = async () => {
     if (!playSafety.foregroundServiceDeclaration) return;
-    navigator.clipboard.writeText(playSafety.foregroundServiceDeclaration);
-    setCopiedFs(true);
-    setTimeout(() => setCopiedFs(false), 2000);
+    const success = await copyToClipboard(playSafety.foregroundServiceDeclaration);
+    if (success) {
+      setCopiedFs(true);
+      setTimeout(() => setCopiedFs(false), 2000);
+    }
   };
 
   return (

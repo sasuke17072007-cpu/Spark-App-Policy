@@ -3,6 +3,8 @@ import { PolicyConfig, AuditResult } from '../types/policy';
 import { generatePlainTextPolicy } from '../utils/policyGenerator';
 import { Sparkles, ShieldCheck, AlertTriangle, CheckCircle, RefreshCw, ArrowRight } from 'lucide-react';
 
+import { generateLocalComplianceAudit } from '../utils/auditEngine';
+
 interface AiPolicyAuditorProps {
   config: PolicyConfig;
   onNavigateToConfig: () => void;
@@ -18,22 +20,33 @@ export const AiPolicyAuditor: React.FC<AiPolicyAuditorProps> = ({ config, onNavi
     setError(null);
     try {
       const policyText = generatePlainTextPolicy(config);
-      const res = await fetch('/api/audit-policy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ policyText, appConfig: config }),
-      });
+      let data: AuditResult | null = null;
 
-      if (!res.ok) {
-        throw new Error(`Audit request failed with status ${res.status}`);
+      try {
+        const res = await fetch('/api/audit-policy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ policyText, appConfig: config }),
+        });
+
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (fetchErr) {
+        console.warn('Backend audit API unavailable, falling back to local audit engine:', fetchErr);
       }
 
-      const data = await res.json();
+      // If backend API returned error or is unavailable (e.g. static host/Vercel)
+      if (!data || !data.score) {
+        data = generateLocalComplianceAudit(config);
+      }
+
       setAuditResult(data);
     } catch (err: unknown) {
       const error = err as Error;
-      console.error(error);
-      setError(error?.message || 'Failed to complete audit');
+      console.error('Audit execution error:', error);
+      // Even on catastrophic failure, provide local audit
+      setAuditResult(generateLocalComplianceAudit(config));
     } finally {
       setLoading(false);
     }

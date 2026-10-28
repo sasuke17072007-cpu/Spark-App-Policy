@@ -13,6 +13,7 @@ import { ConfigurationForm } from './components/ConfigurationForm';
 import { StoreGuidanceView } from './components/StoreGuidanceView';
 import { AiPolicyAuditor } from './components/AiPolicyAuditor';
 import { PublicWebPreview } from './components/PublicWebPreview';
+import { copyToClipboard } from './utils/clipboard';
 import { FileText, Sliders, ShieldCheck, Sparkles, Globe } from 'lucide-react';
 
 export default function App() {
@@ -22,11 +23,13 @@ export default function App() {
   >('plain_text');
   const [hasCopied, setHasCopied] = useState(false);
 
-  const handleCopyPlainText = () => {
+  const handleCopyPlainText = async () => {
     const text = generatePlainTextPolicy(config);
-    navigator.clipboard.writeText(text);
-    setHasCopied(true);
-    setTimeout(() => setHasCopied(false), 2000);
+    const success = await copyToClipboard(text);
+    if (success) {
+      setHasCopied(true);
+      setTimeout(() => setHasCopied(false), 2000);
+    }
   };
 
   const handleSelectPreset = (presetId: string) => {

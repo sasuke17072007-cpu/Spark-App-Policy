@@ -52,12 +52,14 @@ export const PlainTextPolicyView: React.FC<PlainTextPolicyViewProps> = ({
   const jumpToSection = (sectionNumber: number) => {
     const container = document.getElementById('policy-text-display');
     if (!container) return;
-    const targetText = `${sectionNumber}. `;
-    const fullText = container.innerText;
-    const index = fullText.indexOf(targetText);
+    const fullText = container.innerText || '';
+    const marker = `${sectionNumber}. `;
+    const index = fullText.indexOf(marker);
     if (index !== -1) {
-      const approximatePercent = index / fullText.length;
-      container.scrollTop = container.scrollHeight * approximatePercent;
+      const precedingLines = fullText.slice(0, index).split('\n').length;
+      const totalLines = fullText.split('\n').length;
+      const targetScroll = (precedingLines / totalLines) * container.scrollHeight;
+      container.scrollTo({ top: Math.max(0, targetScroll - 20), behavior: 'smooth' });
     }
   };
 

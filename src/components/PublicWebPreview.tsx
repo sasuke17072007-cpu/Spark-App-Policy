@@ -11,7 +11,12 @@ export const PublicWebPreview: React.FC<PublicWebPreviewProps> = ({ config }) =>
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+    } catch (err) {
+      console.warn('window.print is blocked by sandbox iframe, downloading HTML instead:', err);
+      handleDownloadHtml();
+    }
   };
 
   const handleDownloadHtml = () => {
